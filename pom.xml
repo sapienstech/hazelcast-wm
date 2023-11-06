@@ -24,14 +24,16 @@
     <properties>
         <!-- needed for checkstyle/findbugs -->
         <main.basedir>${project.basedir}</main.basedir>
+        <maven.repository.base.url>http://bdmsdev6.sapiens.int:8087/artifactory</maven.repository.base.url>
+        <maven.repository.repos.url>${maven.repository.base.url}/repo/</maven.repository.repos.url>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <jdk.version>1.17</jdk.version>
+        <jdk.version>17</jdk.version>
         <target.dir>target</target.dir>
         <maven.build.timestamp.format>yyyyMMdd</maven.build.timestamp.format>
         <timestamp>${maven.build.timestamp}</timestamp>
 
-        <hazelcast.version>5.2.1</hazelcast.version>
+        <hazelcast.version>5.2.4</hazelcast.version>
 
         <log4j.version>1.2.12</log4j.version>
         <junit.version>4.13.1</junit.version>
@@ -41,18 +43,12 @@
         <org.springframework.version>6.0.4</org.springframework.version>
         <spring-security.version>6.0.1</spring-security.version>
         <jetty.maven.plugin.version>11.0.13</jetty.maven.plugin.version>
-        <tomcat.version>10.1.5</tomcat.version>
-
-        <!-- Not using 3.1 at the moment since it recompiles all classes every time -->
-        <!-- https://jira.codehaus.org/browse/MCOMPILER-205 -->
-        <!--<maven.compiler.plugin.version>3.1</maven.compiler.plugin.version>-->
-        <maven.compiler.plugin.version>2.5.1</maven.compiler.plugin.version>
-        <maven.jar.plugin.version>2.4</maven.jar.plugin.version>
-        <maven.source.plugin.version>2.2.1</maven.source.plugin.version>
+        <tomcat.version>10.1.15</tomcat.version>
+        <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
+        <maven.jar.plugin.version>2.6</maven.jar.plugin.version>
+        <maven.source.plugin.version>3.3.0</maven.source.plugin.version>
         <maven.bundle.plugin.version>2.3.7</maven.bundle.plugin.version>
         <maven.animal.sniffer.plugin.version>1.14</maven.animal.sniffer.plugin.version>
-        <maven.gpg.plugin.version>1.4</maven.gpg.plugin.version>
-        <maven.javadoc.plugin.version>2.9</maven.javadoc.plugin.version>
         <bytebuddy.version>1.6.12</bytebuddy.version>
 
         <maven.surefire.plugin.version>2.18.1</maven.surefire.plugin.version>
@@ -76,28 +72,30 @@
     </scm>
     <developers>
         <developer>
-            <id>oztalip</id>
-            <name>talip ozturk</name>
-            <email>talip@hazelcast.com</email>
-        </developer>
-        <developer>
-            <id>fuad</id>
-            <name>fuad malikov</name>
-            <email>fuad@hazelcast.com</email>
+            <id>swatantrajain-sapiens</id>
+            <name>Swatantra Jain</name>
+            <email>swatantra.jain@sapiens.com</email>
         </developer>
     </developers>
 
     <distributionManagement>
         <repository>
-            <id>release-repository</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+            <id>sap-rel</id>
+            <name>sapiens releases</name>
+            <url>${maven.repository.base.url}/libs-release-local</url>
         </repository>
         <snapshotRepository>
-            <id>snapshot-repository</id>
-            <name>Maven2 Snapshot Repository</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
             <uniqueVersion>false</uniqueVersion>
+            <id>cloud-sap-snap</id>
+            <name>sapiens snapshots</name>
+            <url>https://dm-artifactory.sapiens.com/artifactory/libs-snapshot-local</url>
         </snapshotRepository>
+<!--        <snapshotRepository>-->
+<!--            <uniqueVersion>false</uniqueVersion>-->
+<!--            <id>sap-snap</id>-->
+<!--            <name>sapiens snapshots</name>-->
+<!--            <url>${maven.repository.base.url}/libs-snapshot-local</url>-->
+<!--        </snapshotRepository>-->
     </distributionManagement>
 
     <repositories>
@@ -122,82 +120,6 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven.surefire.plugin.version}</version>
-                <configuration combine.self="override">
-                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                    <runOrder>failedfirst</runOrder>
-
-                    <!-- 1C means 1 process per cpu core -->
-                    <!-- forkCount>1C</forkCount>
-                    <reuseForks>true</reuseForks>
-
-                    <threadCount>1</threadCount>
-                    <perCoreThreadCount>true</perCoreThreadCount>
-                    <parallel>methods</parallel -->
-
-                    <!-- the argLine variable is needed for JaCoco -->
-                    <argLine>
-                        -Xms128m -Xmx1G
-                        -Dhazelcast.phone.home.enabled=false
-                        -Dhazelcast.mancenter.enabled=false
-                        -Dhazelcast.logging.type=none
-                        -Dhazelcast.test.use.network=false
-                    </argLine>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>${maven.checkstyle.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>checkstyle</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <configLocation>${main.basedir}/checkstyle/checkstyle.xml</configLocation>
-                    <suppressionsLocation>${main.basedir}/checkstyle/suppressions.xml</suppressionsLocation>
-                    <headerLocation>${main.basedir}/checkstyle/ClassHeader.txt</headerLocation>
-                    <enableRSS>false</enableRSS>
-                    <linkXRef>true</linkXRef>
-                    <consoleOutput>true</consoleOutput>
-                    <failsOnError>true</failsOnError>
-                    <failOnViolation>true</failOnViolation>
-                    <includeTestSourceDirectory>false</includeTestSourceDirectory>
-                    <enableRulesSummary>true</enableRulesSummary>
-                    <propertyExpansion>main.basedir=${main.basedir}</propertyExpansion>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>animal-sniffer-maven-plugin</artifactId>
-                <version>${maven.animal.sniffer.plugin.version}</version>
-                <configuration>
-                    <signature>
-                        <groupId>org.codehaus.mojo.signature</groupId>
-                        <artifactId>java16</artifactId>
-                        <version>1.0</version>
-                    </signature>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>source-java6-check</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
                 <version>${maven.source.plugin.version}</version>
                 <executions>
@@ -206,45 +128,6 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <version>${maven.bundle.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>bundle-manifest</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>manifest</goal>
-                        </goals>
-                        <configuration>
-                            <instructions>
-                                <Import-Package>
-                                    !org.junit,
-                                    !org.apache.tomcat.*,
-                                    !org.apache.catalina.*,
-                                    !org.apache.juli.*,
-                                    !com.hazelcast.*,
-                                    org.apache.log4j;resolution:=optional,
-                                    org.apache.log4j.*;resolution:=optional,
-                                    org.apache.logging.log4j;resolution:=optional,
-                                    org.apache.logging.log4j.*;resolution:=optional,
-                                    org.slf4j;resolution:=optional,
-                                    org.springframework.context;resolution:=optional,
-                                    org.springframework.security.core.session;version="[3.2,4)";resolution:=optional,
-                                    org.springframework.security.web.session;version="[3.2,4)";resolution:=optional,
-                                    org.springframework.web.context;resolution:=optional,
-                                    org.springframework.web.context.support;resolution:=optional,
-                                    *
-                                </Import-Package>
-                                <Fragment-Host>com.hazelcast</Fragment-Host>
-                                <!--<Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>-->
-                            </instructions>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -262,24 +145,7 @@
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
-                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
                     </archive>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-maven-plugin</artifactId>
-                <version>${jetty.maven.plugin.version}</version>
-                <configuration>
-                    <webAppSourceDirectory>${basedir}/src/test/webapp</webAppSourceDirectory>
-                    <useTestScope>true</useTestScope>
-                    <webAppConfig>
-                        <contextPath>/</contextPath>
-                        <descriptor>${basedir}/src/test/webapp/WEB-INF/web.xml</descriptor>
-                    </webAppConfig>
-                    <stopPort>9966</stopPort>
-                    <stopKey>stop</stopKey>
                 </configuration>
             </plugin>
         </plugins>
@@ -421,204 +287,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <profiles>
-        <profile>
-            <id>findbugs</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>findbugs-maven-plugin</artifactId>
-                        <version>${maven.findbugs.plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <phase>compile</phase>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <failOnError>true</failOnError>
-                            <excludeFilterFile>${main.basedir}/findbugs/findbugs-exclude.xml</excludeFilterFile>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>test-coverage</id>
-            <properties>
-                <argLine>
-                    -Xms128m -Xmx1G
-                    -Dhazelcast.version.check.enabled=false
-                    -Dhazelcast.mancenter.enabled=false
-                    -Dhazelcast.logging.type=none
-                    -Dhazelcast.test.use.network=false
-                </argLine>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>${maven.jacoco.plugin.version}</version>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>${maven.surefire.plugin.version}</version>
-                        <configuration combine.self="override">
-                            <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                            <testFailureIgnore>true</testFailureIgnore>
-                        </configuration>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>sonar-maven-plugin</artifactId>
-                        <version>${maven.sonar.plugin.version}</version>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>release</id>
-            <properties>
-                <javadoc>true</javadoc>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${maven.gpg.plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>${maven.javadoc.plugin.version}</version>
-                        <configuration>
-                            <javaApiLinks>
-                                <property>
-                                    <name>api_1.6</name>
-                                    <value>http://download.oracle.com/javase/1.6.0/docs/api/</value>
-                                </property>
-                                <property>
-                                    <name>api_1.7</name>
-                                    <value>http://download.oracle.com/javase/1.7.0/docs/api/</value>
-                                </property>
-                            </javaApiLinks>
-                            <maxmemory>1024</maxmemory>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.3</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <serverId>release-repository</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>release-snapshot</id>
-            <properties>
-                <javadoc>true</javadoc>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>${maven.javadoc.plugin.version}</version>
-                        <configuration>
-                            <javaApiLinks>
-                                <property>
-                                    <name>api_1.6</name>
-                                    <value>http://download.oracle.com/javase/1.6.0/docs/api/</value>
-                                </property>
-                                <property>
-                                    <name>api_1.7</name>
-                                    <value>http://download.oracle.com/javase/1.7.0/docs/api/</value>
-                                </property>
-                            </javaApiLinks>
-                            <excludePackageNames>
-                                *.impl:*.internal:*.operations:*.proxy:*.util:com.hazelcast.aws.security:
-                                *.handlermigration:*.client.connection.nio:*.client.console:*.buildutils:
-                                *.client.protocol.generator:*.cluster.client:*.concurrent:*.collection:
-                                *.nio.ascii:*.nio.ssl:*.nio.tcp:*.partition.client:*.transaction.client:
-                                *.core.server:com.hazelcast.instance:com.hazelcast.PlaceHolder
-                            </excludePackageNames>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>master</id>
-            <properties>
-                <hazelcast.version>5.0-SNAPSHOT</hazelcast.version>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>com.hazelcast</groupId>
-                    <artifactId>hazelcast</artifactId>
-                    <version>${hazelcast.version}</version>
-                </dependency>
-            </dependencies>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>${maven.surefire.plugin.version}</version>
-                        <configuration combine.self="override">
-                            <parallel>none</parallel>
-                            <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                            <argLine>-Xms128m -Xmx1G
-                                -Dhazelcast.phone.home.enabled=false
-                                -Dhazelcast.mancenter.enabled=false
-                                -Dhazelcast.logging.type=none
-                                -Dhazelcast.test.use.network=true
-                            </argLine>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>
