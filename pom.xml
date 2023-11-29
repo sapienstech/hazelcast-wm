@@ -17,7 +17,7 @@
     <name>hazelcast-wm</name>
     <groupId>com.hazelcast</groupId>
     <artifactId>hazelcast-wm</artifactId>
-    <version>5.0-SNAPSHOT</version>
+    <version>5.0</version>
     <packaging>jar</packaging>
     <description>Hazelcast In-Memory DataGrid Web Module Plugin</description>
     <url>http://www.hazelcast.com/</url>
@@ -86,16 +86,10 @@
         </repository>
         <snapshotRepository>
             <uniqueVersion>false</uniqueVersion>
-            <id>cloud-sap-snap</id>
+            <id>sap-snap</id>
             <name>sapiens snapshots</name>
-            <url>https://dm-artifactory.sapiens.com/artifactory/libs-snapshot-local</url>
+            <url>${maven.repository.base.url}/libs-snapshot-local</url>
         </snapshotRepository>
-<!--        <snapshotRepository>-->
-<!--            <uniqueVersion>false</uniqueVersion>-->
-<!--            <id>sap-snap</id>-->
-<!--            <name>sapiens snapshots</name>-->
-<!--            <url>${maven.repository.base.url}/libs-snapshot-local</url>-->
-<!--        </snapshotRepository>-->
     </distributionManagement>
 
     <repositories>
