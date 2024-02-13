@@ -1,0 +1,49 @@
+node('build-machine') {
+
+    String jdktool = tool name: 'jdk17', type: 'hudson.model.JDK'
+    def pomFile = "pom.xml"
+
+    stage('Checkout') {
+        checkout([$class           : 'GitSCM', branches: [[name: "${branch}"]], doGenerateSubmoduleConfigurations: false,
+                  extensions       : [[$class: 'CleanBeforeCheckout'], [$class: 'CloneOption', timeout: 30, noTags: true]],
+                  submoduleCfg     : [],
+                  userRemoteConfigs: [[url: constants.hazelcastGitUrl, credentialsId: constants.gitDecisionBotAccessToken]]
+        ])
+    }
+
+    stage('Build') {
+
+        withEnv(["PATH+JDK=${jdktool}/bin", "JAVA_HOME=${jdktool}/"]) {
+
+            configFileProvider(
+                    [configFile(fileId: constants.localArtifactoryMavenSettings, variable: 'MAVEN_SETTINGS')]) {
+
+                mvn "-f  $pomFile -U -B " +
+                        "clean deploy " +
+                        "-s $MAVEN_SETTINGS " +
+                        "-DskipTests=true "
+               }
+        }
+    }
+
+    stage('Deploy to cloud-artifactory') {
+
+        withEnv(["PATH+JDK=${jdktool}/bin", "JAVA_HOME=${jdktool}/"]) {
+
+            configFileProvider(
+                    [configFile(fileId: constants.cloudArtifactoryMavenSettings, variable: 'MAVEN_SETTINGS')]) {
+
+                mvn "-f  $pomFile -U -B " +
+                        "clean deploy " +
+                        "-s $MAVEN_SETTINGS " +
+                        "-DskipTests=true " +
+                        "-Dmaven.repository.base.url=${constants.cloudArtifactoryUrl}"
+
+            }
+        }
+    }
+
+    stage('cleanup') {
+        cleanWs()
+    }
+}
